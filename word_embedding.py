@@ -1,8 +1,7 @@
 import logging
-from os import path
 import numpy as np
 from gensim import matutils
-from gensim.models.word2vec import Word2Vec
+from gensim.models import word2vec
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,21 +26,16 @@ class Word2Vec(object):
         self.model_path = model_path
         self.topn = topn
         self.vocab = []
-        # self.model = Word2Vec.load_word2vec_format(model_path, binary=True)
-        self.model = Word2Vec.load(model_path)
+        self.model = word2vec.Word2Vec.load(model_path)
         logger.info("Finish loading word embedding model")
 
     @staticmethod
     def train(model_name, training_data_path, **kwargs):
-        if (hasattr(model_name, "name") and path.isfile(model_name.name)) or path.isfile(model_name):
-            input("%s already exists and will be overwritten. Press Enter to proceed." % model_name)
-
         logger.info("Training the model")
         sentences = SentenceGenerator(training_data_path)
-        model = Word2Vec(sentences, **kwargs)
+        model = word2vec.Word2Vec(sentences, **kwargs)
         logger.info("Saving the model")
-        model.init_sims(replace=True) # trim unneeded model memory = use (much) less RAM. 
-        # model.save_word2vec_format(model_name, binary=True)
+        model.init_sims(replace=True)  # trim unneeded model memory = use (much) less RAM.
         model.save(model_name)
         logger.info("Trained model was saved to %s." % model_name)
 
@@ -49,7 +43,7 @@ class Word2Vec(object):
         assert self.model is not None, "You have to load a model"
         assert self.vocab is not None, "You have to set vocab"
         assert self.topn is not None
-        vocab = self.vocab
+        assert hasattr(self, "syn0norm_in_vocab"), "You need to call set_vocab first"
         topn = self.topn
 
         try:
